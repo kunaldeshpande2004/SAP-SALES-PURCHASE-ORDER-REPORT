@@ -1,0 +1,637 @@
+FULL FMTESTING REPORT WITH SO AND PO
+*&amp;---------------------------------------------------------------------*
+*&amp; Report ZFMTEST_REPORT
+*&amp;---------------------------------------------------------------------*
+*&amp;
+*&amp;---------------------------------------------------------------------*
+REPORT zfmtest_report.
+TYPE-POOLS : slis.
+
+TABLES : ekko,lfa1,ekpo,vbap,vekp,vbak,kna1 .
+
+TYPES :
+  &quot;----------------------for purchase order ---------------------------------
+-
+  BEGIN OF tp_table,
+    acc_no  TYPE lfa1-lifnr,
+    name    TYPE adrc-name1,
+    city    TYPE adrc-city1,
+    pin     TYPE adrc-post_code1,
+    street  TYPE adrc-street,
+    region  TYPE adrc-region,
+    country TYPE lfa1-land1,
+    phone   TYPE adr2-tel_number,
+    email   TYPE adr6-smtp_addr,
+  END OF tp_table,
+  BEGIN OF ekpo_data,
+    ebeln TYPE ekpo-ebeln,
+    ebelp TYPE ekpo-ebelp,
+    werks TYPE ekpo-werks,
+    matnr TYPE ekpo-matnr,
+    menge TYPE ekpo-menge,
+    ktmng TYPE  ekpo-ktmng,
+    lgort TYPE ekpo-lgort,
+  END OF ekpo_data,
+  BEGIN OF ekko_data,
+    ebeln TYPE ekko-ebeln,
+    aedat TYPE ekko-aedat,
+    bsart TYPE ekko-bsart,
+    bstyp TYPE ekko-bstyp,
+    lifnr TYPE ekko-lifnr,
+  END OF ekko_data,
+  BEGIN OF makt_data,
+    matnr TYPE makt-matnr,
+    maktx TYPE makt-maktx,
+  END OF makt_data,
+  BEGIN OF fn_data ,
+    PO_no         TYPE ekpo-ebeln,
+    Po_item       TYPE ekpo-ebelp,
+    Po_date       TYPE ekko-aedat,
+    Po_type       TYPE ekko-bsart,
+    acc_no        TYPE lfa1-lifnr,
+    Vendor_name   TYPE adrc-name1,
+    city          TYPE adrc-city1,
+    pin           TYPE adrc-post_code1,
+    street        TYPE adrc-street,
+    region        TYPE adrc-region,
+    country       TYPE lfa1-land1,
+
+    phone         TYPE adr2-tel_number,
+    email         TYPE adr6-smtp_addr,
+    Plant         TYPE ekpo-werks,
+    Material      TYPE ekpo-matnr,
+    M_description TYPE makt-maktx,
+    Flag          TYPE ekpo-bstyp,
+    QuantityF     TYPE ekpo-menge,
+    QuantityL     TYPE  ekpo-ktmng,
+    S_location    TYPE ekpo-lgort,
+  END OF fn_data,
+
+  &quot;-----------------------for sales order -----------------------------------
+---------
+  BEGIN OF vbap_data ,
+    So_no         TYPE vbak-vbeln,
+    So_item       TYPE vbap-posnr,
+    Material      TYPE vbap-matnr,
+    M_description TYPE vbap-arktx,
+    Quantity TYPE vbap-kwmeng,
+  END OF vbap_data,
+
+  BEGIN OF vbak_data ,
+    acc_no TYPE kna1-kunnr,
+    So_no TYPE vbak-vbeln,
+    So_date  TYPE vbak-erdat,
+    So_type  TYPE vbak-auart,
+    Sale_org TYPE vbak-vkorg,
+  END OF vbak_data,
+
+  BEGIN OF so_final,
+    So_no         TYPE vbak-vbeln,
+    So_item       TYPE vbap-posnr,
+    So_date       TYPE vbak-erdat,
+    So_type       TYPE vbak-auart,
+
+    acc_no        TYPE kna1-kunnr,
+    Vendor_name   TYPE adrc-name1,
+    city          TYPE adrc-city1,
+    pin           TYPE adrc-post_code1,
+    street        TYPE adrc-street,
+    region        TYPE adrc-region,
+    country       TYPE lfa1-land1,
+    phone         TYPE adr2-tel_number,
+    Sale_org      TYPE vbak-vkorg,
+    Material      TYPE vbap-matnr,
+    M_description TYPE vbap-arktx,
+    Quantity      TYPE vbap-kwmeng,
+
+  END OF so_final.
+&quot;----------- for po --------------------
+  DATA : lv_scode TYPE STANDARD TABLE OF zget_bpaddress_accno,
+  ls_acc  TYPE zget_bpaddress_accno.
+
+DATA : tk_table    TYPE TABLE OF zget_bpaddress_struct,
+       fn_table    TYPE TABLE OF fn_data WITH HEADER LINE,
+       ls_final    TYPE fn_data,
+       gs_layout   TYPE slis_layout_alv,
+       gt_fieldcat TYPE slis_t_fieldcat_alv,
+       wa_fieldcat TYPE slis_fieldcat_alv.
+  &quot;-----------for so ------------------------
+   DATA : lv_socode TYPE STANDARD TABLE OF yget_bpaddress_customer ,
+  ls_soacc  TYPE yget_bpaddress_customer .
+
+DATA : tk_sotable    TYPE TABLE OF yget_bpaddress_struct ,
+       fn_sotable    TYPE TABLE OF so_final WITH HEADER LINE,
+       ls_sofinal    TYPE so_final,
+ls_sotable type yget_bpaddress_struct.
+*       gs_layout   TYPE slis_layout_alv,
+*       gt_fieldcat TYPE slis_t_fieldcat_alv,
+*       wa_fieldcat TYPE slis_fieldcat_alv.
+
+SELECTION-SCREEN : BEGIN OF BLOCK r WITH FRAME TITLE TEXT-001 .
+PARAMETERS : po RADIOBUTTON GROUP g1 USER-COMMAND TEST DEFAULT &#39;X&#39;,
+             so RADIOBUTTON GROUP g1.
+SELECTION-SCREEN : END OF BLOCK r .
+SELECTION-SCREEN : BEGIN OF BLOCK a WITH FRAME TITLE TEXT-001.
+               SELECT-OPTIONS : s_code FOR lfa1-lifnr  MODIF ID p ,
+                  s_date FOR ekko-aedat MODIF ID p ,
+                 s_docno FOR ekpo-ebeln MODIF ID p .
+
+  SELECTION-SCREEN : END OF BLOCK a.
+SELECTION-SCREEN  : BEGIN OF BLOCK b WITH FRAME TITLE TEXT-001.
+SELECT-OPTIONS :      s_code1 FOR kna1-kunnr  MODIF ID s ,
+                 so_data FOR vbap-erdat MODIF ID s ,
+                  So_no FOR vbak-vbeln MODIF ID s .
+SELECTION-SCREEN : END OF BLOCK b .
+
+AT SELECTION-SCREEN OUTPUT .
+  IF so = &#39;X&#39; .
+    LOOP AT SCREEN .
+      CHECK screen-group1 = &#39;P&#39;.
+      screen-active  = 0.
+ MODIFY SCREEN.
+ENDLOOP.
+ELSE .
+      LOOP AT SCREEN .
+      CHECK screen-group1 = &#39;S&#39;.
+      screen-active  = 0.
+ MODIFY SCREEN.
+ENDLOOP.
+  ENDIF.
+*  LOOP AT SCREEN.
+*
+* CASE screen-group1.                                 &quot; YPP_MASS_DMR_DISPLAY
+*   WHEN &#39;SO&#39;.
+*     CHECK screen-group1 = &#39;s&#39;.
+*     screen-active = 0.
+*
+*   WHEN &#39;PO&#39;.
+*     CHECK screen-group1 = &#39;p&#39;  .
+*     screen-active = 0.
+* ENDCASE .
+
+* MODIFY SCREEN.
+*
+*ENDLOOP.
+
+START-OF-SELECTION.
+  IF po = &#39;X&#39;.
+*    WRITE : / &#39;BEFORE - &#39;.
+    PERFORM fetch_PO_NUM.
+*WRITE : / &#39;AFTER - &#39;.
+      IF sy-subrc = 0.
+
+*        WRITE : / &#39;REPORT - &#39;.
+    &quot;----------- Step 1: Create field catalog for purchase order -----------&quot;
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;PO_no&#39;.
+
+    wa_fieldcat-seltext_m = &#39;PO_no&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+    wa_fieldcat-col_pos = 1.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Po_item&#39;.
+    wa_fieldcat-seltext_m = &#39;Po_item&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 2.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Po_date&#39;.
+    wa_fieldcat-seltext_m = &#39;Po_date&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 3.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Po_type&#39;.
+    wa_fieldcat-seltext_m = &#39;Po_type&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 4.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;acc_no&#39;.
+    wa_fieldcat-seltext_m = &#39;ACCOUNT_NO&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 5.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Vendor_name&#39;.
+    wa_fieldcat-seltext_m = &#39;Vendor_name&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 6.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;city&#39;.
+    wa_fieldcat-seltext_m = &#39;city&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+
+    wa_fieldcat-col_pos = 7.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;pin&#39;.
+    wa_fieldcat-seltext_m = &#39;pin&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+    wa_fieldcat-col_pos = 8.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;street&#39;.
+    wa_fieldcat-seltext_m = &#39;street&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 9.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;region&#39;.
+    wa_fieldcat-seltext_m = &#39;region&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 10.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;country&#39;.
+    wa_fieldcat-seltext_m = &#39;country&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 20.
+    wa_fieldcat-col_pos = 11.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;phone&#39;.
+    wa_fieldcat-seltext_m = &#39;phone&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 20.
+    wa_fieldcat-col_pos = 12.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;email&#39;.
+    wa_fieldcat-seltext_m = &#39;email&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 35.
+    wa_fieldcat-col_pos = 13.
+
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Plant&#39;.
+    wa_fieldcat-seltext_m = &#39;Plant&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 50.
+    wa_fieldcat-col_pos = 14.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Material&#39;.
+    wa_fieldcat-seltext_m = &#39;Material&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 15.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;M_description&#39;.
+    wa_fieldcat-seltext_m = &#39;M_description&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 16.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Flag&#39;.
+    wa_fieldcat-seltext_m = &#39;Flag&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 17.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;QuantityF&#39;.
+    wa_fieldcat-seltext_m = &#39;QuantityF&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 18.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;QuantityL&#39;.
+    wa_fieldcat-seltext_m = &#39;QuantityL&#39;.
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 19.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;S_location&#39;.
+    wa_fieldcat-seltext_m = &#39;S_location&#39;.
+
+    wa_fieldcat-tabname = &#39;FN_TABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 20.
+    APPEND wa_fieldcat TO gt_fieldcat.
+  &quot;  ----------- Step 2: Set Layout Options -----------&quot;
+    CLEAR gs_layout.
+    gs_layout-zebra = &#39;X&#39;. &quot; Alternate row coloring
+    gs_layout-colwidth_optimize = &#39;X&#39;. &quot; Auto column width
+    gs_layout-detail_popup = &#39;X&#39;. &quot; Enable double-click detail
+    gs_layout-box_fieldname = &#39;&#39;. &quot; Optional: for checkboxes
+    &quot;----------- Step 3: Call ALV Function -----------&quot;
+    CALL FUNCTION &#39;REUSE_ALV_GRID_DISPLAY&#39;
+      EXPORTING
+       i_structure_name = &#39;fn_data&#39;
+        is_layout   = gs_layout
+        it_fieldcat = gt_fieldcat
+        i_save      = &#39;A&#39; &quot; Allow layout saving
+      TABLES
+        t_outtab    = fn_table.
+  ELSE.
+    WRITE: &#39;No data found&#39;.
+ ENDIF.
+
+  ELSE.
+    PERFORM fetch_SO_NUM.
+*    write : / &#39; so selected&#39;.
+      IF sy-subrc = 0.
+
+*        WRITE : / &#39;REPORT - &#39;.
+    &quot;----------- Step 1: Create field catalog for sales order -----------&quot;
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;SO_no&#39;.
+    wa_fieldcat-seltext_m = &#39;SO_no&#39;.
+    wa_fieldcat-tabname = &#39;FN_ SOTABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+    wa_fieldcat-col_pos = 1.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;So_item&#39;.
+    wa_fieldcat-seltext_m = &#39;So_item&#39;.
+
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 2.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;So_date&#39;.
+    wa_fieldcat-seltext_m = &#39;So_date&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 3.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;So_type&#39;.
+    wa_fieldcat-seltext_m = &#39;So_type&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 4.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;acc_no&#39;.
+    wa_fieldcat-seltext_m = &#39;ACCOUNT_NO&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 5.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Vendor_name&#39;.
+    wa_fieldcat-seltext_m = &#39;Vendor_name&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 40.
+    wa_fieldcat-col_pos = 6.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;city&#39;.
+    wa_fieldcat-seltext_m = &#39;city&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 7.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;pin&#39;.
+    wa_fieldcat-seltext_m = &#39;pin&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 12.
+
+    wa_fieldcat-col_pos = 8.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;street&#39;.
+    wa_fieldcat-seltext_m = &#39;street&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 9.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;region&#39;.
+    wa_fieldcat-seltext_m = &#39;region&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 10.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;country&#39;.
+    wa_fieldcat-seltext_m = &#39;country&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 20.
+    wa_fieldcat-col_pos = 11.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;phone&#39;.
+    wa_fieldcat-seltext_m = &#39;phone&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 20.
+    wa_fieldcat-col_pos = 12.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Sale_org&#39;.
+    wa_fieldcat-seltext_m = &#39;Sale_org&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 35.
+    wa_fieldcat-col_pos = 13.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Material&#39;.
+    wa_fieldcat-seltext_m = &#39;Material&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 14.
+
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;M_description&#39;.
+    wa_fieldcat-seltext_m = &#39;M_description&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 30.
+    wa_fieldcat-col_pos = 15.
+    APPEND wa_fieldcat TO gt_fieldcat.
+    CLEAR wa_fieldcat.
+    wa_fieldcat-fieldname = &#39;Quantity&#39;.
+    wa_fieldcat-seltext_m = &#39;Quantity&#39;.
+    wa_fieldcat-tabname = &#39;FN_SOTABLE&#39;.
+    wa_fieldcat-outputlen = 10.
+    wa_fieldcat-col_pos = 16.
+    APPEND wa_fieldcat TO gt_fieldcat.
+
+  &quot;  ----------- Step 2: Set Layout Options -----------&quot;
+    CLEAR gs_layout.
+    gs_layout-zebra = &#39;X&#39;. &quot; Alternate row coloring
+    gs_layout-colwidth_optimize = &#39;X&#39;. &quot; Auto column width
+    gs_layout-detail_popup = &#39;X&#39;. &quot; Enable double-click detail
+    gs_layout-box_fieldname = &#39;&#39;. &quot; Optional: for checkboxes
+    &quot;----------- Step 3: Call ALV Function -----------&quot;
+    CALL FUNCTION &#39;REUSE_ALV_GRID_DISPLAY&#39;
+      EXPORTING
+       i_structure_name = &#39;so_final&#39;
+        is_layout   = gs_layout
+        it_fieldcat = gt_fieldcat
+        i_save      = &#39;A&#39; &quot; Allow layout saving
+      TABLES
+        t_outtab    = fn_sotable.
+  ELSE.
+    WRITE: &#39;No data found&#39;.
+ ENDIF.
+
+  ENDIF.
+
+  &quot; code for fetch purchase order
+FORM fetch_PO_NUM.
+  DATA : lt_ekpo  TYPE TABLE OF ekpo_data,
+
+         lt_ekko  TYPE TABLE OF ekko_data,
+         lt_makt  TYPE TABLE OF makt_data,
+         ls_ekpo  TYPE ekpo_data,
+         ls_ekko  TYPE ekko_data,
+         ls_makt  TYPE makt_data,
+         ls_table TYPE zget_bpaddress_struct.
+
+  SELECT ebeln,aedat , bsart , bstyp , lifnr FROM ekko INTO TABLE @lt_ekko WH
+ERE ebeln IN @s_docno  AND aedat IN @s_date  AND lifnr IN @s_code.
+  IF lt_ekko IS NOT INITIAL.
+    SELECT   ebeln , ebelp , werks ,matnr , menge , ktmng , lgort FROM ekpo I
+NTO  TABLE @lt_ekpo FOR ALL ENTRIES IN @lt_ekko WHERE ebeln = @lt_ekko-
+ebeln AND aedat = @lt_ekko-aedat..
+  ENDIF.
+  IF lt_ekpo IS NOT INITIAL.
+    SELECT  matnr, maktx FROM makt INTO TABLE @lt_makt FOR ALL ENTRIES IN @lt
+_ekpo WHERE matnr = @lt_ekpo-matnr.
+  ENDIF.
+
+  SELECT lifnr INTO @ls_acc FROM lfa1  FOR ALL ENTRIES IN @lt_ekko  WHERE lif
+nr = @lt_ekko-lifnr .&quot; AND LIFNR IN @s_code. &quot;BETWEEN lv_low AND lv_high.
+    APPEND ls_acc TO lv_scode.
+  ENDSELECT.
+  CALL FUNCTION &#39;ZGET_BPADDRESS&#39;
+    TABLES
+      account_numbers = lv_scode
+      fm_table        = tk_table.
+
+  LOOP AT lt_ekpo INTO ls_ekpo .
+    READ TABLE lt_ekko INTO ls_ekko WITH KEY ebeln = ls_ekpo-ebeln .
+    READ TABLE lt_makt INTO ls_makt WITH KEY matnr = ls_ekpo-matnr .
+*WRITE : / &#39;HERE ls ekko &#39; ,  ls_ekko .
+*
+*WRITE : / &#39;HERE ls makt &#39; ,  ls_makt .
+    READ TABLE tk_table INTO ls_table WITH  KEY acc_no = ls_ekko-lifnr  .
+    CLEAR ls_final.
+    ls_final-PO_no = ls_ekpo-ebeln.
+*    ls_final-PO_no    = ls_ekpo-ebeln.
+    ls_final-Po_item       = ls_ekpo-ebelp.
+    ls_final-Po_date        = ls_ekko-aedat.
+    ls_final-Po_type        = ls_ekko-bsart.
+    ls_final-acc_no         = ls_table-acc_no.
+    ls_final-Vendor_name   =   ls_table-name .
+    ls_final-city           = ls_table-city.
+    ls_final-pin            = ls_table-pin.
+
+    ls_final-street         = ls_table-street.
+    ls_final-region        = ls_table-region.
+    ls_final-country        = ls_table-country.
+    ls_final-phone         = ls_table-phone.
+    ls_final-email         = ls_table-email.
+    ls_final-Plant         = ls_ekpo-werks.
+    ls_final-Material       = ls_ekpo-matnr.
+    ls_final-M_description  = ls_makt-maktx.
+    ls_final-Flag          = ls_ekko-bstyp.
+    ls_final-QuantityF      = ls_ekpo-menge.
+    ls_final-QuantityL     = ls_ekpo-ktmng.
+    ls_final-S_location      = ls_ekpo-lgort.
+    APPEND ls_final TO fn_table.
+*fn_table = ls_final .
+
+  ENDLOOP.
+
+*
+*WRITE : / &#39;HERE&#39; , lines( fn_table ).
+
+*BREAK-POINT.
+
+ENDFORM.
+
+FORM fetch_SO_NUM.
+
+  DATA : lt_vbap  TYPE TABLE OF vbap_data,
+         lt_vbak  TYPE TABLE OF vbak_data,
+         ls_vbap  TYPE vbap_data,
+         ls_vbak  TYPE vbak_data,
+         ls_table TYPE YGET_BPADDRESS_CUSTOMER .
+
+     SELECT kunnr,vbeln , erdat , auart , vkorg FROM vbak INTO  TABLE @lt_vba
+k  WHERE vbeln IN @So_no AND erdat IN @so_data AND kunnr IN @s_code1.
+  IF lt_vbak IS NOT INITIAL.
+  SELECT vbeln , posnr ,matnr , arktx FROM vbap INTO TABLE @lt_vbap FOR ALL E
+NTRIES IN @lt_vbak WHERE vbeln = @lt_vbak-So_no AND erdat =  @lt_vbak-
+so_date .
+
+  ENDIF.
+*  IF lt_ekpo IS NOT INITIAL.
+*    SELECT  matnr, maktx FROM makt INTO TABLE @lt_makt FOR ALL ENTRIES IN @l
+t_ekpo WHERE matnr = @lt_ekpo-matnr.
+*  ENDIF.
+
+  SELECT kunnr INTO @ls_soacc FROM kna1  FOR ALL ENTRIES IN @lt_vbak  WHERE k
+unnr = @lt_vbak-acc_no .&quot; AND LIFNR IN @s_code. &quot;BETWEEN lv_low AND lv_high.
+    APPEND ls_soacc TO lv_socode.
+  ENDSELECT.
+  CALL FUNCTION &#39;YGET_BPADDRESS&#39;
+    TABLES
+      account_numbers = lv_socode
+      fm_table        = tk_sotable.
+
+  LOOP AT lt_vbak INTO ls_vbak .
+    READ TABLE lt_vbap INTO ls_vbap WITH KEY So_no = ls_vbak-So_no .
+*    READ TABLE lt_makt INTO ls_makt WITH KEY matnr = ls_ekpo-matnr .
+
+    READ TABLE tk_sotable INTO ls_sotable WITH  KEY acc_no = ls_vbak-
+acc_no  .
+    CLEAR ls_sofinal.
+    ls_sofinal-So_no = ls_vbak-so_no.
+    ls_sofinal-So_item       = ls_vbap-so_item.
+    ls_sofinal-So_date        = ls_vbak-so_date.
+    ls_sofinal-So_type        = ls_vbak-so_type.
+    ls_sofinal-acc_no         = ls_sotable-acc_no.
+    ls_sofinal-Vendor_name   =   ls_sotable-name .
+    ls_sofinal-city           = ls_sotable-city.
+    ls_sofinal-pin            = ls_sotable-pin.
+    ls_sofinal-street         = ls_sotable-street.
+    ls_sofinal-region        = ls_sotable-region.
+    ls_sofinal-country        = ls_sotable-country.
+    ls_sofinal-phone         = ls_sotable-phone.
+    ls_sofinal-Sale_org         = ls_vbak-sale_org.
+    ls_sofinal-Material       = ls_vbap-Material.
+    ls_sofinal-M_description  = ls_vbap-M_description.
+    ls_sofinal-Quantity    = ls_vbap-Quantity.
+
+    APPEND ls_sofinal TO fn_sotable.
+
+  ENDLOOP.
+
+ENDFORM.
