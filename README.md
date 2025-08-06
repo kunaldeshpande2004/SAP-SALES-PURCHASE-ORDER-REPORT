@@ -1,110 +1,64 @@
-📌 Project Title: SAP-SALES-PURCHASE-ORDER-REPORT
-🔧 Technology Stack:
-SAP ABAP (Advanced Business Application Programming)
+# 📊 SAP-SALES-PURCHASE-ORDER-REPORT
 
-ALV Grid Reporting
+## 🔧 Technology Stack
 
-Function Modules
+- SAP ABAP (Advanced Business Application Programming)  
+- ALV Grid Reporting  
+- Function Modules  
+- Custom Tables  
+- Module Pool Programming (for selection UI)  
+- Selection Screens and Dynamic Filters  
 
-Custom Tables
+---
 
-Module Pool Programming
+## 📘 Project Description
 
-Selection Screens and Dynamic Filters
+The `SAP-SALES-PURCHASE-ORDER-REPORT` is a custom ABAP report that delivers a consolidated and dynamic view of **Sales Orders** and **Purchase Orders**. Designed for real-time business analysis, it offers a user-friendly **ALV-based interface** for stakeholders to monitor and evaluate transactional data efficiently.
 
-📘 Project Description:
-The SAP-SALES-PURCHASE-ORDER-REPORT is a custom-developed ABAP report designed to provide a consolidated view of both Sales Orders and Purchase Orders within the SAP system. It serves as a single, user-friendly interface for business stakeholders to analyze real-time transactional data related to sales and procurement.
+The solution includes **dynamic selection criteria**, **reusable function modules**, and **ALV grid output** for a seamless user experience—all within a single program.
 
-This report was built using ALV (ABAP List Viewer) for rich, interactive output and incorporates dynamic filters, custom logic, and modularized code for efficient performance.
+---
 
-📋 Key Features:
-✅ Dual Mode Report:
+## 📋 Key Features
 
-Allows users to switch between Sales Order Report and Purchase Order Report using radio buttons on the selection screen.
+### ✅ Dual Mode Report
+- Toggle between **Sales Order Mode** and **Purchase Order Mode** using radio buttons on the selection screen.
 
-🧾 Dynamic Selection Criteria:
+### 🧾 Dynamic Selection Criteria
+- Filters data using:
+  - Date Range  
+  - Sales Org / Purchase Org  
+  - Customer / Vendor  
+  - Material / Plant  
+- Built using `SELECT-OPTIONS` and `PARAMETERS`.
 
-Users can filter data by date range, document type, vendor/customer, material number, and plant using SELECT-OPTIONS and PARAMETERS.
-
-🛠️ Custom Function Modules:
-
-Used to fetch vendor and customer names from standard tables like LFA1, KNA1, etc., using modular and reusable code architecture.
-
-📊 ALV Grid Output:
-
-The data is displayed using ALV GRID with features such as column sorting, filtering, totaling, and column resizing for a seamless user experience.
-
-🧾 Field Catalog & Layout Customization:
-
-Enhanced readability using appropriate field catalog settings including currency/quantity alignment, text alignment, and hotspot support.
-
-🔁 Reuse of Structures:
-
-Used custom type definitions (ZTY_SALES_PURCHASE) to hold report data dynamically and uniformly for both order types.
-
-🧩 Technical Implementation:
-Selection Screen:
-
-Implemented using SELECTION-SCREEN BEGIN OF BLOCK, PARAMETERS, and SELECT-OPTIONS to support advanced filters.
-
-Example filters: Sales Org, Purchase Org, Material, Plant, Customer, Vendor.
-
-Custom Tables Used (if any):
-
-ZTABLE_ORDER_CONFIG – Holds configurations related to sales/purchase order filters.
-
-Modularization:
-
-Data-fetch logic modularized into:
-
-ZFM_GET_SALES_DATA
-
-ZFM_GET_PURCHASE_DATA
-
-ALV Logic:
-
-Used CL_GUI_ALV_GRID and REUSE_ALV_GRID_DISPLAY depending on output type.
-
-Field catalog built using LVC_FCAT and layout using LVC_S_LAYO.
-
-🧵 Screens & Flow:
-Initial Selection Screen with Filters
-
-<img width="975" height="475" alt="image" src="https://github.com/user-attachments/assets/39f4856d-2675-4f05-bdf9-75ae5e55156a" />
+  <img width="975" height="475" alt="image" src="https://github.com/user-attachments/assets/9f315b01-fdd4-4667-83da-ce45605559e4" />
 
 
-Radio buttons for Sales / Purchase Report
+### 🛠️ Custom Function Modules
+- Reusable FM architecture:
+  - `ZFM_GET_SALES_DATA`  
+  - `ZFM_GET_PURCHASE_DATA`  
+- Fetches enriched master data like vendor/customer names from **LFA1**, **KNA1**, etc.
 
-Date range, Material, Vendor, etc.
-
-Custom Function Module Fetch Execution
-
-<img width="975" height="439" alt="image" src="https://github.com/user-attachments/assets/a226c2f5-c41d-47ba-83b9-003ca04da885" />
-
-
-Fetches description for customers, vendors, and materials.
+  <img width="975" height="439" alt="image" src="https://github.com/user-attachments/assets/bc640c28-f76d-475b-b848-204f6102f6e7" />
 
 
-Displaying ALV output SO/PO Number, Vendor Name, Material, Quantity Ordered, Net Price, etc.
+### 📊 ALV Grid Output
+- Interactive ALV display with:
+  - Column sorting & filtering  
+  - Totals and subtotals  
+  - Column resizing  
+  - Layout saving
+ 
+<img width="975" height="461" alt="image" src="https://github.com/user-attachments/assets/fcbb5fa6-b71d-43ac-872e-63c791341aaa" />
 
-<img width="975" height="461" alt="image" src="https://github.com/user-attachments/assets/27a57a83-2689-4410-beb0-d8e8e939771a" />
+
+### 🧾 Field Catalog & Layout Customization
+- Enhanced formatting using `LVC_FCAT`:
+  - Currency and quantity alignment  
+  - Text wrapping & alignment
+  
+### SCREENSHOTS 
 
 
-📈 Business Impact:
-Enabled faster analysis of critical sales and procurement data directly in SAP GUI.
-
-Reduced manual effort to gather and filter reports from multiple transactions like VA05, ME2N, etc.
-
-Improved accuracy and decision-making efficiency for procurement and sales departments.
-
-🔒 Authorization & Security:
-Implemented authorization checks to restrict access to users with appropriate roles (e.g., Sales Analyst, Purchase Clerk).
-
-Used AUTHORITY-CHECK for authorization object validation.
-
-📅 Planned Enhancements (Future Scope):
-Email delivery of ALV reports using SAP BCS (Business Communication Services)
-
-Integration with SAP SmartForms to generate printable PDF reports
-
-Role-based access for selection screen elements
