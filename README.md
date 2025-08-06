@@ -59,6 +59,6 @@ The solution includes **dynamic selection criteria**, **reusable function module
   - Currency and quantity alignment  
   - Text wrapping & alignment
   
-### SCREENSHOTS 
+
 
 
